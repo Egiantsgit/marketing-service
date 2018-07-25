@@ -1,14 +1,15 @@
 package com.egiants.mrkt.serviceImpl;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import com.egiants.mrkt.dao.MarketingDao;
 import com.egiants.mrkt.entity.Marketing;
 import com.egiants.mrkt.service.MarketingService;
+import com.egiants.mrkt.Exceptions.ResourceNotFoundException;
 
 @Service
 public class DefaultMarketingService implements MarketingService {
@@ -23,8 +24,12 @@ public class DefaultMarketingService implements MarketingService {
 
     @Override
     public Marketing getCallDetail(String callId) {
-        //TODO: throw custom error if there is no record
-        return this.marketingDao.getCallDetail(callId);
+//        return this.marketingDao.getCallDetail(callId);
+        Marketing marketing = this.marketingDao.getCallDetail(callId);
+        if(marketing ==null) {
+            throw new ResourceNotFoundException(callId);
+        }
+        return marketing;
     }
 
     @Override
@@ -39,7 +44,11 @@ public class DefaultMarketingService implements MarketingService {
 
     @Override
     public void deleteMarketing(String callId) {
-        //TODO: may need to throw error based on
-        this.marketingDao.deleteMarketing(callId);
+        
+    	try {
+            this.marketingDao.deleteMarketing(callId);
+        } catch (Exception e) {
+            throw new ResourceNotFoundException(callId);
+        }
     }
 }

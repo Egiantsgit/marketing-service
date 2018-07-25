@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.egiants.mrkt.Exceptions.MismatchIdentifierException;
+import com.egiants.mrkt.Exceptions.ResourceNotFoundException;
 import com.egiants.mrkt.entity.Marketing;
 
 import com.egiants.mrkt.service.MarketingService;
@@ -26,10 +27,11 @@ import io.swagger.annotations.ApiOperation;
 
 @RestController
 @RequestMapping("/calls")
-@Api(value = "Marketing", description = "Operations pertaining to marketings")
+@Api(value = "Marketing", description= "Operations pertaining to marketings")
 public class MarketingController {
 
-    @Autowired
+	//TODO: add swagger documentation
+	@Autowired
     private MarketingService marketingService;
 
 
@@ -53,11 +55,14 @@ public class MarketingController {
     }
 
     @ApiOperation(value = "Add Marketing")
-    @RequestMapping(value = "/call", method = RequestMethod.POST, consumes = {MediaType.APPLICATION_JSON_VALUE,
+    @RequestMapping(value = "/call/callId", method = RequestMethod.POST, consumes = {MediaType.APPLICATION_JSON_VALUE,
             MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE,
             MediaType.APPLICATION_XML_VALUE})
-    public ResponseEntity<Marketing> createMarketing(@Valid @RequestBody Marketing marketing) {
-
+    public ResponseEntity<Marketing> createMarketing(@PathVariable("callId") String callId,
+    		@Valid @RequestBody Marketing marketing) {
+    	if (!callId.equals(marketing.getCallId())) {
+            throw new MismatchIdentifierException(callId);
+        }
         return new ResponseEntity<>(this.marketingService.createMarketing(marketing), HttpStatus.CREATED);
     }
 
@@ -67,16 +72,24 @@ public class MarketingController {
             MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<Marketing> updateMarketing(
             @PathVariable("callId") String callId, @RequestBody Marketing marketing) {
+    	if (!callId.equals(marketing.getCallId())) {
+            throw new MismatchIdentifierException(callId);
+        }
 
         return new ResponseEntity<>(this.marketingService.updateMarketing(marketing), HttpStatus.OK);
     }
 
-    @ApiOperation(value = "Delete User")
+    @ApiOperation(value = "Delete Marketing")
     @RequestMapping(value = "/{callId:.+}", method = RequestMethod.DELETE, produces = {
             MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
 
-    public ResponseEntity<Void> deleteMarketing(@PathVariable("callId") String callId) {
-
+    public ResponseEntity<Void> deleteMarketing(@PathVariable("callId") String callId, @RequestBody Marketing marketing) {
+    	if(marketing ==null) {
+            throw new ResourceNotFoundException(callId);
+        }
+    	if (!callId.equals(marketing.getCallId())) {
+            throw new MismatchIdentifierException(callId);
+        }
         this.marketingService.deleteMarketing(callId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
